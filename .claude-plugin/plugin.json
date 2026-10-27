@@ -1,0 +1,6 @@
+{
+  "name": "progress-hud",
+  "version": "0.1.0",
+  "description": "A live progress pane for subagents and tasks, with time and cost estimates, on the terminal and desktop",
+  "types": "./types/index.d.ts"
+}

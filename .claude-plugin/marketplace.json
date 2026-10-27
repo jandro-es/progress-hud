@@ -1,0 +1,5 @@
+{
+  "name": "local-mods",
+  "owner": { "name": "jandro-es" },
+  "plugins": [{ "name": "progress-hud", "source": "./" }]
+}
