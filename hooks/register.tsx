@@ -13,6 +13,7 @@ import {
   isHistory,
   listUsd,
   moveTask,
+  plain,
   remember,
   shortModel,
   sparkline,
@@ -414,8 +415,8 @@ async function tick($: EngineInterface) {
       const state = stateOf(info.status)
       const next: AgentRow = {
         ...row,
-        label: info.description || info.name || row.label,
-        type: info.type,
+        label: plain(info.description || info.name || row.label),
+        type: plain(info.type),
         isListed: true,
         state,
         endedAt: state === 'running' ? undefined : (row.endedAt ?? now),
@@ -428,8 +429,8 @@ async function tick($: EngineInterface) {
       .filter(a => !known.has(a.id))
       .map(a => ({
         ...newAgent(a.id, now),
-        label: a.description || a.name || a.type,
-        type: a.type,
+        label: plain(a.description || a.name || a.type),
+        type: plain(a.type),
         isListed: true,
         state: stateOf(a.status),
       }))
@@ -539,7 +540,7 @@ export const register: Register = on => {
       await update($, agents, list =>
         withAgent(list, e.agentId, now, a => ({
           ...a,
-          model: used.model,
+          model: plain(used.model),
           steps: a.steps + 1,
           tokens: addTokens(a.tokens, tokens),
           listUsd: a.listUsd + listUsd(used.model, tokens),
@@ -580,8 +581,8 @@ export const register: Register = on => {
       const now = await $.clock.now()
       const row: TaskRow = {
         id: made.id,
-        subject: made.subject ?? e.subject,
-        activeForm: e.activeForm,
+        subject: plain(made.subject ?? e.subject),
+        activeForm: e.activeForm === undefined ? undefined : plain(e.activeForm),
         state: 'pending',
         source: 'task',
         createdAt: now,
@@ -605,8 +606,8 @@ export const register: Register = on => {
           t.id === e.taskId
             ? {
                 ...t,
-                subject: e.subject ?? t.subject,
-                activeForm: e.activeForm ?? t.activeForm,
+                subject: e.subject === undefined ? t.subject : plain(e.subject),
+                activeForm: e.activeForm === undefined ? t.activeForm : plain(e.activeForm),
                 state: status ?? t.state,
               }
             : t,
@@ -627,7 +628,7 @@ export const register: Register = on => {
         const fromList = listed.map(
           (t): TaskRow => ({
             ...(byId.get(t.id) ?? { id: t.id, source: 'task' as const, createdAt: now, state: t.status }),
-            subject: t.subject,
+            subject: plain(t.subject),
             state: t.status,
           }),
         )
@@ -653,8 +654,8 @@ export const register: Register = on => {
               createdAt: now,
               state: 'pending' as const,
             }),
-            subject: todo.content,
-            activeForm: todo.activeForm,
+            subject: plain(todo.content),
+            activeForm: plain(todo.activeForm),
             state: todo.status,
           }),
         )
@@ -671,9 +672,9 @@ export const register: Register = on => {
     const row: ShellRow = {
       id,
       kind: 'shell',
-      command: e.command,
-      description: e.description,
-      key: commandKey(e.command),
+      command: plain(e.command),
+      description: e.description === undefined ? undefined : plain(e.description),
+      key: commandKey(plain(e.command)),
       agentId: e.agentId,
       state: isBackground ? 'background' : 'running',
       startedAt: await $.clock.now(),
@@ -696,8 +697,8 @@ export const register: Register = on => {
         id: `monitor:${taskId}`,
         taskId,
         kind: 'monitor',
-        command: e.command ?? e.ws?.url ?? 'monitor',
-        description: e.description,
+        command: plain(e.command ?? e.ws?.url ?? 'monitor'),
+        description: plain(e.description),
         key: 'monitor',
         agentId: e.agentId,
         state: 'background',

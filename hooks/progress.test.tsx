@@ -1,7 +1,7 @@
 import { expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
-import { bar, duration, estimateTasks, EMPTY_HISTORY, usd } from './estimate'
+import { bar, duration, estimateTasks, EMPTY_HISTORY, plain, usd } from './estimate'
 import { commandKey, lastLine, parseNotice, stateFromNotice } from './shells'
 import type { TaskRow } from '../types'
 
@@ -195,6 +195,16 @@ test('a background shell shows its output as it grows and ends on its notice', a
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   expect(await ui.find({ type: 'Text', text: /Run the test watcher · .* · exit 1/ })).toBeDefined()
   await ui.unmount()
+})
+
+test('untrusted text loses every escape sequence and control character', async () => {
+  expect(plain('a\u001b]0;title\u001b\\b')).toBe('ab')
+  expect(plain('a\u001b]8;;http://x\u0007link\u001b]8;;\u0007b')).toBe('alinkb')
+  expect(plain('a\u001bP1$r\u001b\\b')).toBe('ab')
+  expect(plain('a\u009b31mred\u001b[0mb')).toBe('aredb')
+  expect(plain('bell\u0007 back\u0008space\u007f\u0085')).toBe('bell backspace')
+  expect(plain('tab\tand\nnewline stay')).toBe('tab\tand\nnewline stay')
+  expect(lastLine('ok\n\u001b]0;pwned\u001b\\done\u0007\n')).toBe('done')
 })
 
 test('the shell helpers', async () => {

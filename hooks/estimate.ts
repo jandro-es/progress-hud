@@ -225,9 +225,24 @@ export function shortModel(model: string | undefined): string | undefined {
   return model?.replace(/^claude-/, '').replace(/-\d{8}$/, '')
 }
 
+// Text from outside (command lines, their output, task and agent names) as a
+// terminal may draw it safely: every escape sequence (CSI, OSC ended by BEL or
+// ST, DCS, SOS, PM, APC) and every C0 and C1 control character but tab and
+// newline removed.
+export function plain(text: string): string {
+  return text
+    .replace(/\x1b\][\s\S]*?(?:\x07|\x1b\\|\x9c|$)/g, '')
+    .replace(/\x1b[PX^_][\s\S]*?(?:\x1b\\|\x9c|$)/g, '')
+    .replace(/[\x90\x98\x9e\x9f][\s\S]*?(?:\x1b\\|\x9c|$)/g, '')
+    .replace(/\x9d[\s\S]*?(?:\x07|\x1b\\|\x9c|$)/g, '')
+    .replace(/(?:\x1b\[|\x9b)[0-?]*[ -/]*[@-~]?/g, '')
+    .replace(/\x1b[ -/]*[0-~]?/g, '')
+    .replace(/[\x00-\x08\x0b-\x1f\x7f-\x9f]/g, '')
+}
+
 export function clip(text: string, width: number): string {
   if (width <= 1) return ''
-  const one = text.replace(/\s+/g, ' ').trim()
+  const one = plain(text).replace(/\s+/g, ' ').trim()
 
   return one.length <= width ? one : one.slice(0, width - 1) + '…'
 }

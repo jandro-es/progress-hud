@@ -1,5 +1,5 @@
 import type { History, ShellRow, ShellState } from '../types'
-import { median } from './estimate'
+import { median, plain } from './estimate'
 
 export const SHELLS_KEEP = 30
 export const DEFAULT_TIMEOUT_MS = 120_000
@@ -67,10 +67,9 @@ export function outputPathIn(text: string | undefined): string | undefined {
 // The last line a terminal would show: escapes dropped, a carriage-return
 // progress line reduced to what it last drew.
 export function lastLine(text: string, width = 240): string | undefined {
-  const clean = text.replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, '').replace(/\x1b\][^\x07]*\x07/g, '')
-  const lines = clean
+  const lines = text
     .split(/\n/)
-    .map(l => (l.split('\r').filter(p => p.trim() !== '').pop() ?? '').trim())
+    .map(l => (l.split('\r').map(plain).filter(p => p.trim() !== '').pop() ?? '').trim())
     .filter(l => l !== '')
   const last = lines[lines.length - 1]
 
